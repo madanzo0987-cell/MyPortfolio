@@ -74,7 +74,7 @@ function loadProfileTab() {
         <div>
           <label class="upload-btn" for="avatarFile">Upload Photo</label>
           <input type="file" id="avatarFile" accept="image/*">
-          <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:0.4rem;">Max 2MB. JPG, PNG, GIF.</div>
+          <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:0.4rem;">Max 5MB. JPG, PNG, GIF. Auto-cropped + resized.</div>
         </div>
       </div>
     </div>
@@ -117,8 +117,8 @@ function loadProfileTab() {
 function bindProfileEvents() {
   document.getElementById('avatarFile').addEventListener('change', async e => {
     const file = e.target.files[0]; if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { showToast('Image too large (max 2MB)', 'error'); return; }
-    const b64 = await fileToBase64(file);
+    if (file.size > 5 * 1024 * 1024) { showToast('Image too large (max 5MB)', 'error'); return; }
+    const b64 = await resizeImageToDataUrl(file, 512, 0.85);
     const preview = document.getElementById('avatarPreview');
     preview.innerHTML = `<img src="${b64}" id="avatarImg" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
     const p = adminData.portfolio || {}; p.avatar_url = b64; adminData.portfolio = p;
@@ -587,6 +587,31 @@ function loadSettingsTab() {
       </div>
     </div>
     <div class="form-actions" style="margin-top:1.5rem;"><button class="btn-save" onclick="saveSettings()">Save Settings</button></div>`;
+}
+
+function resizeImageToDataUrl(file, size, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        // Center-crop to square, then resize
+        const minSide = Math.min(img.width, img.height);
+        const sx = Math.round((img.width - minSide) / 2);
+        const sy = Math.round((img.height - minSide) / 2);
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('Invalid image'));
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 function bindSettingsEvents() {}
 function setAccent(name, btn) {
