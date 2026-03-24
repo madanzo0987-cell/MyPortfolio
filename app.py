@@ -21,7 +21,8 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 CORS(app, supports_credentials=True)
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'db', 'portfolio.db')
+DEFAULT_DB_PATH = os.path.join(os.path.dirname(__file__), 'db', 'portfolio.db')
+DB_PATH = os.environ.get('SQLITE_DB_PATH', DEFAULT_DB_PATH)
 
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 

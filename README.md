@@ -69,3 +69,22 @@ This sends every contact-form message to Telegram.
 - **Local dev** uses SQLite (`db/portfolio.db`) automatically.
 - **Render** uses PostgreSQL automatically when `DATABASE_URL` is set.
 - The app will create tables and seed default data on first run.
+
+
+## Render Free Tier (SQLite) Fix
+
+Render free web services have an **ephemeral filesystem**, so SQLite can get wiped and cause 502 errors.
+To use SQLite on Render, add a **Persistent Disk** and point the DB file there.
+
+### Steps
+
+1. In Render dashboard, go to your Web Service.
+2. Click **Disks** ? **Add Disk**.
+3. Set:
+   - **Mount Path**: `/var/data`
+   - **Size**: 1 GB
+4. Add Environment Variable:
+   - `SQLITE_DB_PATH=/var/data/portfolio.db`
+5. Redeploy the service.
+
+Now SQLite will stay safe across restarts.
