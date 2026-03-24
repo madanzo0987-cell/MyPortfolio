@@ -57,7 +57,7 @@ This sends every contact-form message to Telegram.
 4. Set **Build Command**:
    - `pip install -r requirements.txt`
 5. Set **Start Command**:
-   - `gunicorn app:app`
+   - `gunicorn app:app --bind 0.0.0.0:$PORT`
 6. Add Environment Variables:
    - `SECRET_KEY` = any strong random string
    - `DATABASE_URL` = your Render PostgreSQL connection string
