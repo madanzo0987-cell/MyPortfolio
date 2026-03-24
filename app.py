@@ -11,6 +11,11 @@ from email.mime.multipart import MIMEMultipart
 from flask import Flask, render_template, request, session, jsonify, redirect, url_for
 from flask_cors import CORS
 import bcrypt
+try:
+    import psycopg2
+    import psycopg2.extras
+except Exception:
+    psycopg2 = None
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -21,17 +26,48 @@ DB_PATH = os.path.join(os.path.dirname(__file__), 'db', 'portfolio.db')
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
 
+class DB:
+    def __init__(self, conn, is_postgres):
+        self.conn = conn
+        self.is_postgres = is_postgres
+
+    def execute(self, query, params=()):
+        if params is None:
+            params = ()
+        if self.is_postgres:
+            q = query.replace('?', '%s')
+            cur = self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur.execute(q, params)
+            return cur
+        return self.conn.execute(query, params)
+
+    def commit(self):
+        self.conn.commit()
+
+    def close(self):
+        self.conn.close()
+
+
 def get_db():
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        if psycopg2 is None:
+            raise RuntimeError('psycopg2 is required for PostgreSQL connections')
+        ssl_mode = os.environ.get('PGSSLMODE', 'require')
+        conn = psycopg2.connect(database_url, sslmode=ssl_mode)
+        return DB(conn, True)
+
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    return conn
+    return DB(conn, False)
 
 
 def init_db():
-    conn = get_db()
-    c = conn.cursor()
-
-    c.executescript('''
+    db = get_db()
+    if db.is_postgres:
+        c = db.conn.cursor()
+        statements = [
+            '''
         CREATE TABLE IF NOT EXISTS portfolio (
             id TEXT PRIMARY KEY,
             name TEXT,
@@ -48,32 +84,32 @@ def init_db():
             avatar_url TEXT,
             resume_url TEXT,
             is_available INTEGER DEFAULT 1
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS stats (
             id TEXT PRIMARY KEY,
             label TEXT NOT NULL,
             value TEXT NOT NULL,
             icon TEXT,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS tech_stack (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             icon TEXT,
             category TEXT,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS services (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             description TEXT,
             icon TEXT,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS skills (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
@@ -81,8 +117,8 @@ def init_db():
             proficiency INTEGER DEFAULT 50,
             icon TEXT,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS projects (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
@@ -93,8 +129,8 @@ def init_db():
             tags TEXT,
             featured INTEGER DEFAULT 0,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS education (
             id TEXT PRIMARY KEY,
             institution TEXT NOT NULL,
@@ -105,8 +141,8 @@ def init_db():
             description TEXT,
             icon TEXT,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS experience (
             id TEXT PRIMARY KEY,
             company TEXT NOT NULL,
@@ -116,8 +152,8 @@ def init_db():
             description TEXT,
             current INTEGER DEFAULT 0,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS certifications (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
@@ -126,22 +162,22 @@ def init_db():
             credential_url TEXT,
             image_url TEXT,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS languages (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             proficiency TEXT,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS interests (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             icon TEXT,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS achievements (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
@@ -151,8 +187,8 @@ def init_db():
             category TEXT,
             link TEXT,
             display_order INTEGER DEFAULT 0
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS contact_messages (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
@@ -161,8 +197,8 @@ def init_db():
             message TEXT NOT NULL,
             is_read INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS settings (
             id TEXT PRIMARY KEY,
             theme TEXT DEFAULT 'dark',
@@ -183,41 +219,211 @@ def init_db():
             telegram_enabled INTEGER DEFAULT 0,
             telegram_bot_token TEXT,
             telegram_chat_id TEXT
-        );
-
+        )''',
+            '''
         CREATE TABLE IF NOT EXISTS admin_users (
             id TEXT PRIMARY KEY,
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL
-        );
-    ''')
+        )'''
+        ]
+        for stmt in statements:
+            c.execute(stmt)
+    else:
+        c = db.conn.cursor()
+        c.executescript('''
+            CREATE TABLE IF NOT EXISTS portfolio (
+                id TEXT PRIMARY KEY,
+                name TEXT,
+                title TEXT,
+                about TEXT,
+                email TEXT,
+                phone TEXT,
+                location TEXT,
+                github TEXT,
+                linkedin TEXT,
+                twitter TEXT,
+                instagram TEXT,
+                website TEXT,
+                avatar_url TEXT,
+                resume_url TEXT,
+                is_available INTEGER DEFAULT 1
+            );
 
-    # Ensure instagram column exists for older databases
-    cols = [r[1] for r in c.execute("PRAGMA table_info(portfolio)").fetchall()]
-    if 'instagram' not in cols:
-        c.execute("ALTER TABLE portfolio ADD COLUMN instagram TEXT")
+            CREATE TABLE IF NOT EXISTS stats (
+                id TEXT PRIMARY KEY,
+                label TEXT NOT NULL,
+                value TEXT NOT NULL,
+                icon TEXT,
+                display_order INTEGER DEFAULT 0
+            );
 
-    # Ensure telegram settings columns exist for older databases
-    settings_cols = [r[1] for r in c.execute("PRAGMA table_info(settings)").fetchall()]
-    if 'telegram_enabled' not in settings_cols:
-        c.execute("ALTER TABLE settings ADD COLUMN telegram_enabled INTEGER DEFAULT 0")
-    if 'telegram_bot_token' not in settings_cols:
-        c.execute("ALTER TABLE settings ADD COLUMN telegram_bot_token TEXT")
-    if 'telegram_chat_id' not in settings_cols:
-        c.execute("ALTER TABLE settings ADD COLUMN telegram_chat_id TEXT")
+            CREATE TABLE IF NOT EXISTS tech_stack (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                icon TEXT,
+                category TEXT,
+                display_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS services (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT,
+                icon TEXT,
+                display_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS skills (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                category TEXT,
+                proficiency INTEGER DEFAULT 50,
+                icon TEXT,
+                display_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS projects (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT,
+                image_url TEXT,
+                github_url TEXT,
+                live_url TEXT,
+                tags TEXT,
+                featured INTEGER DEFAULT 0,
+                display_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS education (
+                id TEXT PRIMARY KEY,
+                institution TEXT NOT NULL,
+                degree TEXT,
+                field TEXT,
+                start_date TEXT,
+                end_date TEXT,
+                description TEXT,
+                icon TEXT,
+                display_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS experience (
+                id TEXT PRIMARY KEY,
+                company TEXT NOT NULL,
+                position TEXT,
+                start_date TEXT,
+                end_date TEXT,
+                description TEXT,
+                current INTEGER DEFAULT 0,
+                display_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS certifications (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                issuer TEXT,
+                date TEXT,
+                credential_url TEXT,
+                image_url TEXT,
+                display_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS languages (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                proficiency TEXT,
+                display_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS interests (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                icon TEXT,
+                display_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS achievements (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT,
+                icon TEXT,
+                date TEXT,
+                category TEXT,
+                link TEXT,
+                display_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS contact_messages (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                subject TEXT,
+                message TEXT NOT NULL,
+                is_read INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS settings (
+                id TEXT PRIMARY KEY,
+                theme TEXT DEFAULT 'dark',
+                accent_color TEXT DEFAULT 'pink',
+                cursor_enabled INTEGER DEFAULT 1,
+                background_effects INTEGER DEFAULT 1,
+                show_stats INTEGER DEFAULT 1,
+                show_services INTEGER DEFAULT 1,
+                show_skills INTEGER DEFAULT 1,
+                show_projects INTEGER DEFAULT 1,
+                show_education INTEGER DEFAULT 1,
+                show_experience INTEGER DEFAULT 1,
+                show_certifications INTEGER DEFAULT 1,
+                show_languages INTEGER DEFAULT 1,
+                show_interests INTEGER DEFAULT 1,
+                show_achievements INTEGER DEFAULT 1,
+                show_contact INTEGER DEFAULT 1,
+                telegram_enabled INTEGER DEFAULT 0,
+                telegram_bot_token TEXT,
+                telegram_chat_id TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS admin_users (
+                id TEXT PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL
+            );
+        ''')
+
+    if db.is_postgres:
+        c.execute("ALTER TABLE portfolio ADD COLUMN IF NOT EXISTS instagram TEXT")
+        c.execute("ALTER TABLE settings ADD COLUMN IF NOT EXISTS telegram_enabled INTEGER DEFAULT 0")
+        c.execute("ALTER TABLE settings ADD COLUMN IF NOT EXISTS telegram_bot_token TEXT")
+        c.execute("ALTER TABLE settings ADD COLUMN IF NOT EXISTS telegram_chat_id TEXT")
+    else:
+        # Ensure instagram column exists for older databases
+        cols = [r[1] for r in c.execute("PRAGMA table_info(portfolio)").fetchall()]
+        if 'instagram' not in cols:
+            c.execute("ALTER TABLE portfolio ADD COLUMN instagram TEXT")
+
+        # Ensure telegram settings columns exist for older databases
+        settings_cols = [r[1] for r in c.execute("PRAGMA table_info(settings)").fetchall()]
+        if 'telegram_enabled' not in settings_cols:
+            c.execute("ALTER TABLE settings ADD COLUMN telegram_enabled INTEGER DEFAULT 0")
+        if 'telegram_bot_token' not in settings_cols:
+            c.execute("ALTER TABLE settings ADD COLUMN telegram_bot_token TEXT")
+        if 'telegram_chat_id' not in settings_cols:
+            c.execute("ALTER TABLE settings ADD COLUMN telegram_chat_id TEXT")
 
     # Seed default data if empty
-    existing = c.execute('SELECT id FROM portfolio').fetchone()
+    existing = db.execute('SELECT id FROM portfolio').fetchone()
     if not existing:
-        seed_data(c)
+        seed_data(db)
 
-    conn.commit()
-    conn.close()
+    db.commit()
+    db.close()
 
 
-def seed_data(c):
+def seed_data(db):
     pid = str(uuid.uuid4())
-    c.execute('''INSERT INTO portfolio (id,name,title,about,email,phone,location,github,linkedin,twitter,instagram,website,avatar_url,resume_url,is_available)
+    db.execute('''INSERT INTO portfolio (id,name,title,about,email,phone,location,github,linkedin,twitter,instagram,website,avatar_url,resume_url,is_available)
               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
               (pid, 'Madan Kumar M', 'Student at Kristu Jayanti University', 
                'BCA (Cloud Computing) student at Kristu Jayanti University in Bengaluru, focused on full-stack web development and strong CS fundamentals. I enjoy building real-world projects, participating in hackathons, and continuously learning new technologies.',
@@ -227,7 +433,7 @@ def seed_data(c):
                '', '', 1))
 
     settings_id = str(uuid.uuid4())
-    c.execute('INSERT INTO settings (id) VALUES (?)', (settings_id,))
+    db.execute('INSERT INTO settings (id) VALUES (?)', (settings_id,))
 
     stats = [
         ('Projects Completed', '8+', '🚀', 0),
@@ -236,7 +442,7 @@ def seed_data(c):
         ('Location', 'Bengaluru, Karnataka, India', '📍', 3),
     ]
     for label, value, icon, order in stats:
-        c.execute('INSERT INTO stats VALUES (?,?,?,?,?)',
+        db.execute('INSERT INTO stats VALUES (?,?,?,?,?)',
                   (str(uuid.uuid4()), label, value, icon, order))
 
     tech = [
@@ -246,7 +452,7 @@ def seed_data(c):
         ('AWS', '☁️', 'devops', 6), ('Git', '📦', 'tools', 7),
     ]
     for name, icon, cat, order in tech:
-        c.execute('INSERT INTO tech_stack VALUES (?,?,?,?,?)',
+        db.execute('INSERT INTO tech_stack VALUES (?,?,?,?,?)',
                   (str(uuid.uuid4()), name, icon, cat, order))
 
     services = [
@@ -256,7 +462,7 @@ def seed_data(c):
         ('UI/UX Design', 'Creating beautiful interfaces with a focus on user experience and accessibility.', '🎨', 3),
     ]
     for title, desc, icon, order in services:
-        c.execute('INSERT INTO services VALUES (?,?,?,?,?)',
+        db.execute('INSERT INTO services VALUES (?,?,?,?,?)',
                   (str(uuid.uuid4()), title, desc, icon, order))
 
     skills_data = [
@@ -272,7 +478,7 @@ def seed_data(c):
         ('Git', 'Tools', 90, '📦', 9),
     ]
     for name, cat, prof, icon, order in skills_data:
-        c.execute('INSERT INTO skills VALUES (?,?,?,?,?,?)',
+        db.execute('INSERT INTO skills VALUES (?,?,?,?,?,?)',
                   (str(uuid.uuid4()), name, cat, prof, icon, order))
 
     projects_data = [
@@ -285,14 +491,14 @@ def seed_data(c):
         ('portfolio', 'GitHub repository: portfolio.', '', 'https://github.com/madanzo0987-cell/portfolio', '', '["GitHub","Portfolio"]', 0, 6),
     ]
     for title, desc, img, gh, live, tags, featured, order in projects_data:
-        c.execute('INSERT INTO projects VALUES (?,?,?,?,?,?,?,?,?)',
+        db.execute('INSERT INTO projects VALUES (?,?,?,?,?,?,?,?,?)',
                   (str(uuid.uuid4()), title, desc, img, gh, live, tags, featured, order))
 
     education_data = [
         ('Kristu Jayanti University', 'BCA', 'Cloud Computing', '2025', 'Present', 'Currently pursuing BCA with a focus on cloud computing and software development.', '', 0),
     ]
     for inst, deg, field, start, end, desc, icon, order in education_data:
-        c.execute('INSERT INTO education VALUES (?,?,?,?,?,?,?,?,?)',
+        db.execute('INSERT INTO education VALUES (?,?,?,?,?,?,?,?,?)',
                   (str(uuid.uuid4()), inst, deg, field, start, end, desc, icon, order))
 
     experience_data = [
@@ -301,7 +507,7 @@ def seed_data(c):
         ('Hackathons', 'Participant', '2023', '2024', 'Built prototypes in 24-48 hour sprints and collaborated with cross-functional teams.', 0, 2),
     ]
     for company, pos, start, end, desc, current, order in experience_data:
-        c.execute('INSERT INTO experience VALUES (?,?,?,?,?,?,?,?)',
+        db.execute('INSERT INTO experience VALUES (?,?,?,?,?,?,?,?)',
                   (str(uuid.uuid4()), company, pos, start, end, desc, current, order))
 
     certs = [
@@ -309,14 +515,14 @@ def seed_data(c):
         ('Google Cloud Professional', 'Google', '2022', 'https://cloud.google.com', '', 1),
     ]
     for name, issuer, date, url, img, order in certs:
-        c.execute('INSERT INTO certifications VALUES (?,?,?,?,?,?,?)',
+        db.execute('INSERT INTO certifications VALUES (?,?,?,?,?,?,?)',
                   (str(uuid.uuid4()), name, issuer, date, url, img, order))
 
     langs = [
         ('English', 'Fluent', 0), ('Hindi', 'Fluent', 1), ('Kannada', 'Fluent', 2), ('Telugu', 'Fluent', 3),
     ]
     for name, prof, order in langs:
-        c.execute('INSERT INTO languages VALUES (?,?,?,?)',
+        db.execute('INSERT INTO languages VALUES (?,?,?,?)',
                   (str(uuid.uuid4()), name, prof, order))
 
     ints = [
@@ -324,7 +530,7 @@ def seed_data(c):
         ('Hiking', '', 3), ('Gaming', '', 4), ('Reading', '', 5),
     ]
     for name, icon, order in ints:
-        c.execute('INSERT INTO interests VALUES (?,?,?,?)',
+        db.execute('INSERT INTO interests VALUES (?,?,?,?)',
                   (str(uuid.uuid4()), name, icon, order))
 
     achvs = [
@@ -332,14 +538,18 @@ def seed_data(c):
         ('Open Source Contributor', 'Contributed to open source and shared learning projects on GitHub.', '', '2024', 'community', 'https://github.com/madanzo0987-cell', 1),
     ]
     for title, desc, icon, date, cat, link, order in achvs:
-        c.execute('INSERT INTO achievements VALUES (?,?,?,?,?,?,?,?)',
+        db.execute('INSERT INTO achievements VALUES (?,?,?,?,?,?,?,?)',
                   (str(uuid.uuid4()), title, desc, icon, date, cat, link, order))
 
     # Default admin
     password = 'MadanAdmin123'
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-    c.execute('INSERT OR IGNORE INTO admin_users VALUES (?,?,?)',
-              (str(uuid.uuid4()), 'madan@admin.com', hashed))
+    if db.is_postgres:
+        db.execute('INSERT INTO admin_users (id,email,password_hash) VALUES (?,?,?) ON CONFLICT (email) DO NOTHING',
+                   (str(uuid.uuid4()), 'madan@admin.com', hashed))
+    else:
+        db.execute('INSERT OR IGNORE INTO admin_users VALUES (?,?,?)',
+                   (str(uuid.uuid4()), 'madan@admin.com', hashed))
 
 
 def row_to_dict(row):
@@ -761,3 +971,6 @@ if __name__ == '__main__':
     init_db()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+else:
+    # Ensure DB is ready when running via gunicorn/WSGI
+    init_db()

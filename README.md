@@ -47,3 +47,25 @@ This sends every contact-form message to Telegram.
 
 - If you don’t add a chat ID yet, the system will not send Telegram messages.
 - You can update the token or chat ID any time from the Admin Panel.
+
+
+## Deploy on Render (Step-by-Step)
+
+1. Push your code to GitHub.
+2. Go to Render and click **New > Web Service**.
+3. Connect your GitHub repo.
+4. Set **Build Command**:
+   - `pip install -r requirements.txt`
+5. Set **Start Command**:
+   - `gunicorn app:app`
+6. Add Environment Variables:
+   - `SECRET_KEY` = any strong random string
+   - `DATABASE_URL` = your Render PostgreSQL connection string
+7. Click **Deploy**.
+8. Open your service URL and log in to `/admin`.
+
+### PostgreSQL vs SQLite
+
+- **Local dev** uses SQLite (`db/portfolio.db`) automatically.
+- **Render** uses PostgreSQL automatically when `DATABASE_URL` is set.
+- The app will create tables and seed default data on first run.

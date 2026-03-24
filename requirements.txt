@@ -2,4 +2,4 @@ flask
 flask-cors
 bcrypt
 gunicorn
-
+psycopg2-binary
