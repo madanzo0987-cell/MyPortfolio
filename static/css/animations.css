@@ -1,0 +1,103 @@
+/* ── Keyframes ─────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.2); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  33%       { transform: translate(30px,-40px) scale(1.05); }
+  66%       { transform: translate(-20px,20px) scale(0.95); }
+}
+
+@keyframes toastSlide {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position: 200% center; }
+}
+
+/* ── Scroll Reveal ─────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal:nth-child(2) { transition-delay: 0.1s; }
+.reveal:nth-child(3) { transition-delay: 0.2s; }
+.reveal:nth-child(4) { transition-delay: 0.3s; }
+
+/* Staggered children */
+.stagger > * {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.stagger.active > * { opacity: 1; transform: translateY(0); }
+.stagger.active > *:nth-child(1) { transition-delay: 0s; }
+.stagger.active > *:nth-child(2) { transition-delay: 0.1s; }
+.stagger.active > *:nth-child(3) { transition-delay: 0.15s; }
+.stagger.active > *:nth-child(4) { transition-delay: 0.2s; }
+.stagger.active > *:nth-child(5) { transition-delay: 0.25s; }
+.stagger.active > *:nth-child(6) { transition-delay: 0.3s; }
+.stagger.active > *:nth-child(n+7) { transition-delay: 0.35s; }
+
+/* ── Custom Cursor ─────────────────────────── */
+.cursor-dot {
+  position: fixed; z-index: 10000; pointer-events: none;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--primary);
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease;
+}
+.cursor-ring {
+  position: fixed; z-index: 9999; pointer-events: none;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid rgba(236,72,153,0.5);
+  transform: translate(-50%, -50%);
+  transition: all 0.15s ease;
+}
+.cursor-dot.hover  { transform: translate(-50%,-50%) scale(2.5); }
+.cursor-ring.hover { width: 52px; height: 52px; border-color: var(--primary); opacity: 0.6; }
+.cursor-dot.click  { transform: translate(-50%,-50%) scale(0.6); }
+
+@media (pointer: coarse) {
+  .cursor-dot, .cursor-ring { display: none; }
+}
+
+/* ── Loading Spinner ───────────────────────── */
+.spinner {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary);
+  animation: spin-slow 0.8s linear infinite;
+  display: inline-block;
+}
+
+/* ── Shimmer Loading ───────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card2) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ── Counter Animation ─────────────────────── */
+.counter { display: inline-block; }

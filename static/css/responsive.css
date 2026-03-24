@@ -1,0 +1,60 @@
+/* ── Tablet ─────────────────────────────────── */
+@media (max-width: 1024px) {
+  .hero-content { grid-template-columns: 1fr; text-align: center; gap: 2.5rem; }
+  .hero-text { order: 2; }
+  .hero-avatar { order: 1; display: flex; justify-content: center; }
+  .hero-social { justify-content: center; }
+  .hero-cta { justify-content: center; }
+  .hero-about { margin: 0 auto 2rem; }
+  .about-grid { grid-template-columns: 1fr; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .avatar-ring { width: 200px; height: 200px; }
+}
+
+/* ── Mobile ─────────────────────────────────── */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none; flex-direction: column; position: fixed;
+    top: 60px; left: 0; right: 0; bottom: 0;
+    background: var(--bg-dark); padding: 2rem 1.5rem;
+    gap: 0.25rem; z-index: 999; overflow-y: auto;
+  }
+  [data-theme="light"] .nav-links { background: var(--bg-dark); }
+  .nav-links.open { display: flex; }
+  .nav-link { font-size: 1.1rem; padding: 0.75rem 1rem; }
+  .hamburger { display: flex; }
+  .nav-actions .btn-outline { display: none; }
+
+  .hero { padding-top: 5rem; }
+  .avatar-ring { width: 160px; height: 160px; }
+  .hero-cta { flex-direction: column; align-items: center; }
+  .btn-primary, .btn-outline { width: 100%; max-width: 280px; justify-content: center; }
+
+  .section { padding: 3.5rem 1rem; }
+  .section-title { font-size: 1.75rem; }
+  .stats-container { grid-template-columns: repeat(2, 1fr); }
+
+  .services-grid, .projects-grid, .achievements-grid { grid-template-columns: 1fr; }
+  .skills-list { grid-template-columns: 1fr; }
+  .about-grid { gap: 2rem; }
+
+  .contact-grid { gap: 2rem; }
+  .contact-form-wrap { padding: 1.25rem; }
+
+  .admin-layout { flex-direction: column; }
+  .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); }
+  .admin-main { padding: 1rem; }
+
+  .toast-container { left: 1rem; right: 1rem; bottom: 1rem; }
+  .toast { min-width: unset; width: 100%; }
+}
+
+/* ── Small Mobile ────────────────────────────── */
+@media (max-width: 480px) {
+  .hero-name { font-size: 2rem; }
+  .hero-title { font-size: 1.1rem; }
+  .stats-container { grid-template-columns: 1fr 1fr; }
+  .tech-grid { grid-template-columns: repeat(3, 1fr); }
+  .langs-grid { flex-direction: column; align-items: center; }
+  .login-card { padding: 1.75rem 1.25rem; }
+}

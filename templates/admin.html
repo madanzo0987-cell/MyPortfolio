@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-accent="pink">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Portfolio</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">Portfolio Admin</div>
+        <div class="sidebar-sub" id="adminEmail"></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-item active" data-tab="profile"><i class="fas fa-user sidebar-nav-icon"></i> Profile</div>
+        <div class="sidebar-nav-item" data-tab="services"><i class="fas fa-concierge-bell sidebar-nav-icon"></i> Services</div>
+        <div class="sidebar-nav-item" data-tab="techstack"><i class="fas fa-layer-group sidebar-nav-icon"></i> Tech Stack</div>
+        <div class="sidebar-nav-item" data-tab="projects"><i class="fas fa-rocket sidebar-nav-icon"></i> Projects</div>
+        <div class="sidebar-nav-item" data-tab="qualifications"><i class="fas fa-book-open sidebar-nav-icon"></i> Qualifications</div>
+        <div class="sidebar-nav-item" data-tab="credentials"><i class="fas fa-award sidebar-nav-icon"></i> Credentials</div>
+        <div class="sidebar-nav-item" data-tab="messages"><i class="fas fa-envelope sidebar-nav-icon"></i> Messages <span class="badge-count" id="unreadBadge" style="display:none">0</span></div>
+        <div class="sidebar-nav-item" data-tab="settings"><i class="fas fa-gear sidebar-nav-icon"></i> Settings</div>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-outline" onclick="logout()">Sign Out</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main" id="adminMain">
+      <div id="tabContent"></div>
+    </main>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/static/js/utils.js"></script>
+  <script src="/static/js/admin.js"></script>
+</body>
+</html>

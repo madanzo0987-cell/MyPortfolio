@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-accent="pink">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — Portfolio</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/animations.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="login-page">
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="bg-orbs">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+  </div>
+
+  <div class="login-container">
+    <div class="login-card reveal">
+      <div class="login-header">
+        <div class="login-icon">🔐</div>
+        <h1>Admin Login</h1>
+        <p>Sign in to manage your portfolio</p>
+      </div>
+      <div class="login-error" id="loginError" style="display:none"></div>
+      <form class="login-form" id="loginForm">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" name="email" id="emailInput" placeholder="admin@portfolio.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" id="passwordInput" placeholder="••••••••" required>
+        </div>
+        <label class="checkbox-wrap">
+          <input type="checkbox" id="rememberMe"> Remember me
+        </label>
+        <button type="submit" class="btn-primary btn-glow btn-full" id="loginBtn">
+          Sign In
+        </button>
+      </form>
+      <a href="/" class="back-link">← Back to Portfolio</a>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/static/js/utils.js"></script>
+  <script src="/static/js/cursor.js"></script>
+  <script src="/static/js/animations.js"></script>
+  <script>
+    initScrollReveal();
+    initCursor();
+
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const errEl = document.getElementById('loginError');
+      btn.textContent = 'Signing in...';
+      btn.disabled = true;
+      errEl.style.display = 'none';
+
+      const email = document.getElementById('emailInput').value;
+      const password = document.getElementById('passwordInput').value;
+
+      try {
+        const res = await fetch('/papi/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Welcome back!', 'success');
+          setTimeout(() => window.location.href = '/admin', 500);
+        } else {
+          errEl.textContent = data.error || 'Invalid credentials';
+          errEl.style.display = 'block';
+          btn.textContent = 'Sign In';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        errEl.textContent = 'Connection error. Please try again.';
+        errEl.style.display = 'block';
+        btn.textContent = 'Sign In';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-accent="pink">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio</title>
+  <meta name="description" content="Full Stack Developer Portfolio">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/animations.css">
+  <link rel="stylesheet" href="/static/css/responsive.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="scroll-progress" id="scrollProgress"></div>
+
+  <div class="bg-orbs">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a class="nav-logo" href="#hero" id="navName">Portfolio</a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#services" class="nav-link">Services</a></li>
+        <li><a href="#skills" class="nav-link">Skills</a></li>
+        <li><a href="#projects" class="nav-link">Projects</a></li>
+        <li><a href="#education" class="nav-link">Education</a></li>
+        <li><a href="#experience" class="nav-link">Experience</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="/admin" class="btn-outline btn-sm" style="margin-right:8px">Admin</a>
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <div class="hero-text reveal">
+        <div class="availability-badge" id="availabilityBadge">
+          <span class="pulse-dot"></span> Available for work
+        </div>
+        <h1 class="hero-name" id="heroName">Loading...</h1>
+        <h2 class="hero-title gradient-text" id="heroTitle">Full Stack Developer</h2>
+        <p class="hero-about" id="heroAbout">Loading...</p>
+        <div class="hero-social" id="heroSocial"></div>
+        <div class="hero-cta">
+          <a href="#contact" class="btn-primary btn-glow">Get In Touch</a>
+          <a href="#" class="btn-outline" id="resumeBtn">Download CV</a>
+        </div>
+      </div>
+      <div class="hero-avatar reveal">
+        <div class="avatar-ring">
+          <div class="avatar-img" id="heroAvatar">
+            <span class="avatar-placeholder" id="avatarInitials">AJ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats-strip reveal" id="stats">
+    <div class="stats-container" id="statsContainer"></div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section" id="about">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">About <span class="gradient-text">Me</span></h2>
+        <p class="section-subtitle">My tech stack and a bit about me</p>
+      </div>
+      <div class="about-grid">
+        <div class="about-tech reveal">
+          <h3 class="about-sub">Tech Stack</h3>
+          <div class="tech-grid" id="techGrid"></div>
+        </div>
+        <div class="about-info reveal">
+          <div class="tabs">
+            <button class="tab active" data-tab="skills">Skills</button>
+            <button class="tab" data-tab="bio">Bio</button>
+            <button class="tab" data-tab="contact">Contact</button>
+          </div>
+          <div class="tab-content" id="tabContent"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="section section-alt" id="services">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">What I <span class="gradient-text">Do</span></h2>
+        <p class="section-subtitle">Services and expertise I offer</p>
+      </div>
+      <div class="services-grid" id="servicesGrid"></div>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section class="section" id="skills">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">My <span class="gradient-text">Skills</span></h2>
+        <p class="section-subtitle">Technologies and tools I work with</p>
+      </div>
+      <div id="skillsContainer"></div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="section section-alt" id="projects">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">My <span class="gradient-text">Projects</span></h2>
+        <p class="section-subtitle">Things I've built</p>
+      </div>
+      <div class="projects-grid" id="projectsGrid"></div>
+    </div>
+  </section>
+
+  <!-- EDUCATION -->
+  <section class="section" id="education">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">My <span class="gradient-text">Education</span></h2>
+        <p class="section-subtitle">Academic background and certifications</p>
+      </div>
+      <div class="timeline" id="educationTimeline"></div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section class="section section-alt" id="experience">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">Work <span class="gradient-text">Experience</span></h2>
+        <p class="section-subtitle">My professional journey</p>
+      </div>
+      <div class="timeline" id="experienceTimeline"></div>
+    </div>
+  </section>
+
+  <!-- CERTIFICATIONS -->
+  <section class="section" id="certifications">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">My <span class="gradient-text">Certifications</span></h2>
+        <p class="section-subtitle">Professional certifications and credentials</p>
+      </div>
+      <div class="certs-grid" id="certsGrid"></div>
+    </div>
+  </section>
+
+  <!-- LANGUAGES -->
+  <section class="section section-alt" id="languages">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">Languages I <span class="gradient-text">Speak</span></h2>
+        <p class="section-subtitle">Language proficiency levels</p>
+      </div>
+      <div class="langs-grid" id="langsGrid"></div>
+    </div>
+  </section>
+
+  <!-- INTERESTS -->
+  <section class="section" id="interests">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">My <span class="gradient-text">Interests</span></h2>
+        <p class="section-subtitle">What I enjoy outside of work</p>
+      </div>
+      <div class="interests-grid" id="interestsGrid"></div>
+    </div>
+  </section>
+
+  <!-- ACHIEVEMENTS -->
+  <section class="section section-alt" id="achievements">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">My <span class="gradient-text">Achievements</span></h2>
+        <p class="section-subtitle">Milestones and recognitions</p>
+      </div>
+      <div class="achievements-grid" id="achievementsGrid"></div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">Get In <span class="gradient-text">Touch</span></h2>
+        <p class="section-subtitle">Let's work together on something great</p>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-info reveal" id="contactInfo"></div>
+        <div class="contact-form-wrap reveal">
+          <form class="contact-form" id="contactForm">
+            <div class="form-group">
+              <label>Your Name</label>
+              <input type="text" name="name" placeholder="John Doe" required>
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" name="email" placeholder="john@example.com" required>
+            </div>
+            <div class="form-group">
+              <label>Subject</label>
+              <input type="text" name="subject" placeholder="Project inquiry...">
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea name="message" rows="5" placeholder="Tell me about your project..." required></textarea>
+            </div>
+            <button type="submit" class="btn-primary btn-glow btn-full" id="submitBtn">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p id="footerName">Portfolio</p>
+      <p class="footer-copy">Built with ❤️ — <span id="footerYear"></span></p>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/static/js/utils.js"></script>
+  <script src="/static/js/cursor.js"></script>
+  <script src="/static/js/animations.js"></script>
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
